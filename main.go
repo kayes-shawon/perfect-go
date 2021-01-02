@@ -10,6 +10,23 @@ import (
 	"github.com/rs/cors"
 )
 
+type Response struct {
+	Message string `json:"message"`
+}
+
+type Jwks struct {
+	Keys []JSONWebKeys `json:"keys"`
+}
+
+type JSONWebKeys struct {
+	Kty string   `json:"kty"`
+	Kid string   `json:"kid"`
+	Use string   `json:"use"`
+	N   string   `json:"n"`
+	E   string   `json:"e"`
+	X5c []string `json:"x5c"`
+}
+
 
 type Product struct {
 	Id int
@@ -67,10 +84,23 @@ var ProductHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Reques
 })
 
 var AddFeedbackHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request){
-	payload, _ := json.Marshal(products)
+	var product Product
+	vars := mux.Vars(r)
+	slug := vars["slug"]
+
+	for _, p := range products {
+		if p.Slug == slug {
+			product = p
+		}
+	}
 
 	w.Header().Set("Content-Type", "application/json")
-	w.Write([]byte(payload))
+	if product.Slug != "" {
+		payload, _ := json.Marshal(product)
+		w.Write([]byte(payload))
+	} else {
+		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
+	}
 })
 
 var NotImplemented = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
