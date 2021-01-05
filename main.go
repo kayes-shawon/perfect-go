@@ -2,12 +2,11 @@ package main
 
 import (
 	"encoding/json"
-	"github.com/gorilla/mux"
-	"net/http"
 	"errors"
 	"github.com/auth0/go-jwt-middleware"
-	"github.com/gorilla/handlers"
-	"github.com/rs/cors"
+	"github.com/dgrijalva/jwt-go"
+	"github.com/gorilla/mux"
+	"net/http"
 )
 
 type Response struct {
@@ -57,7 +56,23 @@ var StatusHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request
 func main() {
 
 	jwtMiddleware := jwtmiddleware.New(jwtmiddleware.Options {
+		ValidationKeyGetter: func(token *jwt.Token) (interface{}, error) {
+			// Verify 'aud' claim
+			aud := "YOUR_API_IDENTIFIER"
+			checkAud := token.Claims.(jwt.MapClaims).VerifyAudience(aud, false)
+			if !checkAud {
+				return token, errors.New("Invalid audience.")
+			}
 
+			// Verify 'iss' claim
+			iss := "https://YOUR_DOMAIN/"
+			checkIss := token.Claims.(jwt.MapClaims).VerifyIssuer(iss, false)
+			if !checkIss {
+				return token, errors.New("Invalid issuer.")
+			}
+			return result, nil
+		},
+		SigningMethod: jwt.SigningMethodRS256,
 	})
 
 	r := mux.NewRouter()
